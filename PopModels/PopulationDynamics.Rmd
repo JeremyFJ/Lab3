@@ -1,0 +1,628 @@
+---
+title: "Population dynamics and Stock assessment models"
+author: "Francesco Ferretti"
+date: "12/20/2019"
+output: html_document
+bibliography: /Users/ferretti/med.assessment/ATC/tex/atc.bib
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Exponential Growth model
+
+
+
+```{r examplebox2.1}
+b = c(0.1,0.1,0.1) # birth rates
+d = c(0.04,0.1,0.125) # death rates
+N0 = c(500,500,500) # starting populations
+
+Time = seq(0,8,0.5) # time steps
+Nt = matrix(NA, nrow = length(Time), ncol = 3)
+for (i in 1:3){
+  Nt[,i] = N0[i]*exp((b[i]-d[i])*Time)
+}
+
+plot(Nt[,1]~Time, type = "l", ylim = range(Nt))
+lines(Nt[,2]~Time, col = "red")
+lines(Nt[,3]~Time, col = "blue")
+```
+
+Now plot the linear versions of this models.
+
+### Logistic Population Growth
+
+
+```{r box2.2}
+r = 0.5
+K = 1000
+N0 = 50
+Time = seq(0,25,1)
+Nt = c()
+Nt[1] = N0
+Ct = 10
+for (i in 1:25){
+  Nt[i+1] = Nt[i] + r*Nt[i]*(1-Nt[i]/K) - Ct
+}
+par(mfrow  = c(1,2))
+
+plot(Nt~Time, type = "l", ylim = range(Nt))
+
+Ct = 20
+for (i in 1:25){
+  Nt[i+1] = Nt[i] + r*Nt[i]*(1-Nt[i]/K) - Ct
+}
+plot(Nt~Time, type = "l", ylim = range(Nt))
+
+
+
+```
+
+Now we look at intrinsic growth rates > 1 which should lead to unstable and oscillatory population dynamics
+
+```{r fig2.6}
+r = 0.25
+K = 1000
+N0 = 1
+Time = seq(0,100,1)
+Nt = c()
+Nt[1] = N0
+Ct = 0
+for (i in 1:100){
+  Nt[i+1] = Nt[i] + r*Nt[i]*(1-Nt[i]/K) - Ct
+}
+par(mfrow  = c(2,2))
+
+plot(Nt~Time, type = "l", ylim = range(Nt))
+
+r = 1.85
+for (i in 1:100){
+  Nt[i+1] = Nt[i] + r*Nt[i]*(1-Nt[i]/K) - Ct
+}
+plot(Nt~Time, type = "l", ylim = range(Nt))
+
+
+r = 2.5
+for (i in 1:100){
+  Nt[i+1] = Nt[i] + r*Nt[i]*(1-Nt[i]/K) - Ct
+}
+plot(Nt~Time, type = "l", ylim = range(Nt))
+
+r = 3
+for (i in 1:100){
+  Nt[i+1] = Nt[i] + r*Nt[i]*(1-Nt[i]/K) - Ct
+}
+plot(Nt~Time, type = "l", ylim = range(Nt))
+
+```
+
+Now adding constant fishing catch
+
+```{r box2.4}
+r = 0.25
+K = 1000
+N0 = 100 # I am starting with something to fish from
+Time = seq(0,100,1)
+Nt = c()
+Nt[1] = N0
+Ct = 20
+for (i in 1:100){
+  Nt[i+1] = Nt[i] + r*Nt[i]*(1-Nt[i]/K) - Ct
+}
+par(mfrow  = c(2,2))
+
+plot(Nt~Time, type = "l", ylim = range(Nt))
+
+r = 1.85
+for (i in 1:100){
+  Nt[i+1] = Nt[i] + r*Nt[i]*(1-Nt[i]/K) - Ct
+}
+plot(Nt~Time, type = "l", ylim = range(Nt))
+
+
+r = 2.5
+for (i in 1:100){
+  Nt[i+1] = Nt[i] + r*Nt[i]*(1-Nt[i]/K) - Ct
+}
+plot(Nt~Time, type = "l", ylim = range(Nt))
+
+r = 3
+for (i in 1:100){
+  Nt[i+1] = Nt[i] + r*Nt[i]*(1-Nt[i]/K) - Ct
+}
+plot(Nt~Time, type = "l", ylim = range(Nt))
+
+```
+
+Now let's look at different sensitivity to constant harvest rate at differet population sizes. Lower population sizes are expected to be more sensitive to exploitation than higher population sizes
+
+```{r fig2.9}
+r = 0.25
+K = 100
+N0 = 1 
+Time = seq(0,100,1)
+Nt = c()
+Nt[1] = N0
+sp = c()
+Ct = 0
+#let's set catch that starts at 20% of the population
+
+for (i in 1:100){
+  #if (Nt[i]>=20) Ct = 4.455 else Ct = 0
+  Nt[i+1] = Nt[i] + r*Nt[i]*(1-Nt[i]/K) - Ct 
+  sp[i] = r*Nt[i]*(1-Nt[i]/K)
+}
+
+par(mfrow  = c(1,1))
+
+plot(Nt~Time, type = "l", ylim = range(Nt))
+
+for (i in 1:100){
+  if (i>=12) Ct = 2.392521969 else Ct = 0
+  Nt[i+1] = Nt[i] + r*Nt[i]*(1-Nt[i]/K) - Ct 
+}
+
+lines(Nt~Time)
+
+for (i in 1:100){
+  if (i>=12) Ct = 2.4 else Ct = 0
+  Nt[i+1] = Nt[i] + r*Nt[i]*(1-Nt[i]/K) - Ct 
+}
+
+lines(Nt~Time)
+
+for (i in 1:100){
+  if (i>=12) Ct = 2.3 else Ct = 0
+  Nt[i+1] = Nt[i] + r*Nt[i]*(1-Nt[i]/K) - Ct 
+}
+
+lines(Nt~Time)
+
+for (i in 1:100){
+  if (i>=29) Ct = 2.375948777 else Ct = 0
+  Nt[i+1] = Nt[i] + r*Nt[i]*(1-Nt[i]/K) - Ct 
+}
+
+lines(Nt~Time)
+
+for (i in 1:100){
+  if (i>=29) Ct = 6 else Ct = 0
+  Nt[i+1] = Nt[i] + r*Nt[i]*(1-Nt[i]/K) - Ct 
+}
+
+lines(Nt~Time)
+
+for (i in 1:100){
+  if (i>=29) Ct = 2 else Ct = 0
+  Nt[i+1] = Nt[i] + r*Nt[i]*(1-Nt[i]/K) - Ct 
+}
+
+lines(Nt~Time)
+
+# 
+# 
+# r = 2.5
+# for (i in 1:100){
+#   Nt[i+1] = Nt[i] + r*Nt[i]*(1-Nt[i]/K) - Ct
+# }
+# plot(Nt~Time, type = "l", ylim = range(Nt))
+# 
+# r = 3
+# for (i in 1:100){
+#   Nt[i+1] = Nt[i] + r*Nt[i]*(1-Nt[i]/K) - Ct
+# }
+# plot(Nt~Time, type = "l", ylim = range(Nt))
+
+```
+
+We can see that when the population is at low levels changes in fishing rate can have different consequences on the population. the stock is very sensitive to slight changes in harvest rate. Whe the stock is a higher levels then large changes of HR can be buffered and the risk of collapsing the population is low.
+
+
+Now let's plot the phase diagram of the discrete logistic population growth.
+
+```{r phaseDiag}
+r = 0.5
+K = 1000
+N0 = 50
+Time = seq(0,100,1)
+Nt = c()
+Nt[1] = N0
+
+for (i in 1:100){
+  Nt[i+1] = Nt[i] + r*Nt[i]*(1-Nt[i]/K)
+}
+
+plot(Nt[1:99],Nt[2:100], type = "l")
+lines(Nt,Nt, lty = 2)
+
+```
+The the difference in poplation abundance betwen the strait line and the curvilinear line is the surplus production, which theoretically should be maximum at k/2. 
+Let's see that in terms of yield
+
+```{r MSY}
+plot(1:50, Nt[1:50], type = "l")
+Y = Nt[2:50] - Nt[1:49]
+Y
+plot(Y~Nt[1:49],type = "l")
+```
+
+
+
+
+### VPA
+
+Example of using VPA for Yield-per Recruit Analyses. This is useful to understand the optimal value of fishing mortality to obtain the maximum yield or identified optimal yield. 
+
+In virtula population analysis we project population numbers backward from the oldest cohort caught in the most recent year. We use an exponential decay to model the population change from one cohort to another: 
+
+$N_{t+1} = N_te^{-(F+M)}$
+
+Where F and M are instantaneus rates of Fishing and Natural mortality. We can then calculate the number fish caught with the catch equation:
+
+$C_t = \frac{F_t}{F_t+M_t}N_t(1-e^{-(F+M)})$
+
+
+So we assume M and F for the oldest cohort. M would be constant for all exploited cohorts. F can vary. 
+
+For example if we assume M = 0.2 and F = 0.6. If we caught 80 fish of age 3 we work out the Number of fish of age 3 with the catch equation rearranged for N:
+
+$N_t = \frac{C_t}{(F_t/Z_t)(1-e^{-Z_t})}$
+
+This will give us 194 fish. Then we use this number and the catch of fish age 2 to workout F_2 (the fishing mortality tha together with M would have produced these catches and surviving fish). 
+
+$C_2 = \frac{F_2}{F_2+M}N_3(e^{(F_2+M)}-1)$
+
+which can be solved by iteration. Then we use $F_2$ to calculate $N_2$:
+
+$N_2 = N_3e^{F_2+M}.
+
+Then we repeat these 2 step for the other cohorts. 
+
+
+
+The following script has been developed from Box 7.6 of Chapter 7 in [@Jennings.etal.2009].
+recruitment is constant, so the structure of a population is the same as if we would see from following a single cohort. Yield is mesured per recruit. F and M are also constant after recruitment (the moment they become vulnerable to te fishery). It Assumes stable age structutre through time. Ignore impact of fishing mortality on recruitment.
+```{r expDec}
+N0 = 100 # number of individual at age 1
+years = 1:10 # follow the cohort for 10 years
+Fi = 0.6 # fishing mortality
+M = 0.2 # natural mortality
+Z = Fi+M # total mortality
+Nt = c(N0,N0*exp(-(Fi+M)*years[1:9])) # calculate numbers in following ages assuming a exponential decay
+plot(Nt~years, type = "l")
+
+W = c(0.6,0.9,2.1,4.1,6.3,8.4,10,11.2,12.6,13.5) # these are average weight at age
+Pb = Nt*W # Population biomass is found mutiplying average weight for number of individuals
+Cn = Fi/(Z)*Nt*(1-exp(-Z)) # catches in Numbers from the catch equation derived in box 7.2
+Cw = Cn*W # catch in biomass
+Y = sum(Cw) # this is teh yield
+
+# If we want to find the Yield per recruit
+Y/100
+# Biomass per recruit
+sum(Pb)/100
+
+```
+
+Now let's calculate Yield-per-recruit for a range of different fishing mortalities.
+Let's write a function which repeat the steps above
+
+```{r YpR}
+getYpR = function(Fi){
+  N0 = 100
+  years = 1:10
+
+  M = 0.2
+  Z = Fi+M
+  Nt = c(N0,N0*exp(-(Fi+M)*years[1:9]))
+
+W = c(0.6,0.9,2.1,4.1,6.3,8.4,10,11.2,12.6,13.5)
+Pb = Nt*W # Population biomass
+Cn = Cn = Fi/(Z)*Nt*(1-exp(-Z)) # catches in Numbers
+Cw = Cn*W
+Y = sum(Cw)
+
+# Yield per recruit
+YpR = Y/100
+# Biomass per recruit
+BpR = sum(Pb)/100
+c(YpR = YpR,BpR = BpR)
+}  
+
+Fis = seq(0,1,.1) # range of fishing mortality values 
+
+dat = do.call(rbind, lapply(Fis, getYpR)) # apply the function to all elements of Fis and then combine the results in a table
+dat = as.data.frame(dat) # we need to make sure this table is a data.frame
+dat$Fi = Fis
+
+par(mar = c(5,5,2,5)) # set the margins for the plotting device
+plot(YpR~Fi, dat, type = "l", axes = FALSE, ylab = "Yield per Recruit (kg)")
+axis(1)
+axis(2)
+par(new = T) # allows overplotting on the same figure
+plot(BpR~Fi, dat, type = "l", lty = 2, axes=FALSE, xlab=NA, ylab=NA, ylim = c(0,20)) # this is the dashed line
+axis(side = 4)
+mtext(4,line = 3 ,text = "Biomass per Recruit (kg)")
+# best Fi
+abline(v = dat$Fi[dat$YpR==max(dat$YpR)], lty = 2)
+
+
+lines(BpR~Fi, dat, lty = 2)
+```
+So fishing harder does not generate more Yield per recruit. The optimal fishin mortality is 0.2.
+
+
+
+
+### Fitting methods 
+
+#### Equilibrium Approaches
+```{r equil}
+
+setwd("~/VTech/Teaching/FMC/2020/s")
+dat = read.csv("../books/ModellingQuantitativeMethodsFisheries/box11.2.csv")
+# peruvian data from Pitcher and Hart
+
+plot(CPUE~Effort, data = dat)
+mod1 = lm(CPUE~Effort, data = dat)
+abline(mod1)
+a = mod1$coefficients[[1]]
+b = mod1$coefficients[[2]]
+MSY = ((a/2)^2)/-b
+Emsy = a/(-2*b)
+
+# Equil C
+dat$EquilC = (a+b*dat$E)*dat$E
+
+# plot catch agaisnt effort and trend line
+plot(EquilC~E,dat, type = "l")
+points(Catch~Effort, dat, pch = 16)
+```
+Now let's use yellowfin data from Haddon's book. 
+
+```{r YFT}
+dat2 = read.csv("../books/ModellingQuantitativeMethodsFisheries/tab11.1.csv")
+# there is an error in the CPUE data
+dat2$CPUE = with(dat2, Catch/Effort)
+plot(CPUE~Effort, data = dat2, pch=16)
+mod2 = lm(CPUE~Effort, data = dat2)
+abline(mod2)
+
+a = mod2$coefficients[[1]]
+b = mod2$coefficients[[2]]
+MSY = ((a/2)^2)/-b
+Emsy = a/(-2*b)
+
+newdat = data.frame(Effort = seq(0,75000,1))
+newdat$EquilC = predict(mod2, newdata = newdat)*newdat$Effort
+
+plot(EquilC~Effort,newdat,type = "l")
+points(Catch~Effort, dat2, pch =16)
+
+```
+#### Regression Approaches
+
+#### Time Series Approaches
+
+we have time series of catch and effort data and we want to minimize the difference between the observed time-series of these indices and the predicted population dynamics according to the specified population model
+
+##### Least squares estimation
+
+Linear regression
+
+##### Maximum likelihood approaches
+
+```{r SPM}
+#install.packages("MSEtool")
+require(MSEtool)
+
+data(swordfish)
+
+#### Observation-error surplus production model
+res <- SP(Data = swordfish)
+
+# Provide starting values, assume B/K = 0.875 in first year of model
+# and symmetrical production curve (n = 2)
+start <- list(dep = 0.875, n = 2)
+res <- SP(Data = swordfish, start = start)
+
+## Not run: 
+plot(res)
+
+## End(Not run)
+
+profile(res, FMSY = seq(0.1, 0.4, 0.01))
+retrospective(res)
+
+
+#### State-space version
+res_SS <- SP_SS(Data = swordfish, start = list(dep = 0.875, sigma = 0.1, tau = 0.1))
+
+## Not run: 
+plot(res_SS)
+
+## End(Not run)
+
+#### Fox model
+res_Fox <- SP(Data = swordfish, start = list(n = 1), fix_n = TRUE)
+res_Fox2 <- SP_Fox(Data = swordfish)
+
+#### SP with r_prior
+res_prior <- SP(Data = SimulatedData, use_r_prior = TRUE)
+
+#### Pass an r_prior to the model with mean = 0.35, sd = 0.10
+res_prior2 <- SP(Data = SimulatedData, use_r_prior = TRUE, start = list(r_prior = c(0.35, 0.10)))
+ 
+```
+Now we are going to explore the package `datalowSA` package written by M. Haddon, the author of "Modelling and Quantitative Methods in Fisheries".
+Please go to [the package GitHub](https://github.com/haddonm/datalowSA/); install the package and type `browseVignettes("datalowSA")`
+
+```{r SPM2}
+#install.packages("remotes")
+#remotes::install_github("haddonm/datalowSA")
+require(datalowSA)
+data(dataspm)
+pars <- c(r=0.2,K=6000,Binit=2800)
+ans <- fitSPM(pars,dataspm$fish,schaefer=TRUE,maxiter=1000)
+```
+
+
+
+```{r explorePack}
+data(dataspm)
+fish <- dataspm$fish
+checkdata(dataspm)
+
+ans <- getlag(fish,plotout=FALSE)
+par(mfrow=c(1,1),mai=c(0.5,0.45,0.05,0.05),oma=c(0.0,0,0.0,0.0)) 
+par(cex=1.0, mgp=c(1.35,0.35,0), font.axis=7,font=7,font.lab=7)
+plot(ans,lwd=3,col=2,main="",ylab="Cross-Correlation")
+minim <- which.min(ans$acf)
+text(0,-0.6,paste0("Optimum Lag = ",ans$lag[minim]),cex=1.1,font=7,pos=4)
+```
+
+The data are from the Trawl scale and shark fishery of SE Australia and refer to the Pink Ling ([**Genypterus blacodes**](https://www.fishbase.se/summary/482)). The data is published in this [stock assessment](https://www.afma.gov.au/sites/default/files/stock-assessment-for-the-southern-and-eastern-scalefish-and-shark-fishery-2016-and-2017-part-1-reduced-size2.pdf?acsf_files_redirect) page 157, Table 8.79. 
+#### Fitting the SPM
+
+```{r fitting}
+# display the dynamics for a set of guessed initial parameters
+# this is to explore the initial parameters
+pars <- c(0.16,6700,3500)  # r, K, and Binit
+negLL(pars,fish,simpspm)
+ans <- displayModel(pars,fish,schaefer=TRUE,target=0.48,addrmse=TRUE)
+
+# now e will optimize the SPM funtion
+pars <- c(0.16,6700,3500) # r, K, and Binit, implies a depletion of ~0.52
+cat("initial -ve log-likelihood ",negLL(pars,fish,simpspm),"\n") 
+
+bestSP <- optim(par=pars,fn=negLL,callfun=simpspm,indat=fish,
+                control=list(maxit = 1000, parscale = c(1,1000,1000)))
+outoptim(bestSP) # outoptim just prints the results more compactly.
+# here I would suggest reading Bolker for the optim function
+
+ans <- displayModel(bestSP$par,fish,schaefer=TRUE,addrmse=TRUE)
+
+```
+Now let's fit the Fox model
+
+```{r spmFox}
+pars <- c(0.16,6700,3500) # r, K, and Binit, implies a depletion of ~0.52
+cat("initial -ve log-likelihood ",negLL(pars,fish,simpspm,schaefer=FALSE),"\n") 
+
+parscl <- magnitude(pars)
+bestSP <- optim(par=pars,fn=negLL,callfun=simpspm,indat=fish,schaefer=FALSE,
+                control=list(maxit = 1000, parscale = parscl))
+outoptim(bestSP)
+ans <- displayModel(bestSP$par,fish,schaefer=FALSE,addrmse=TRUE)
+
+```
+Checking whether the solution is an optimum solution. 
+
+```{r OptimSol}
+pars <- c(0.16,6700,3500) 
+origpar <- pars
+  N <-  20       # the number of random starting points to try
+  scaler <- 10   # how variable; smaller = more variable
+# define a matrix for the results
+  columns <- c("ir","iK","iB0","iLike","r","K","Binit","-veLL","MSY","Iters")
+  results <- matrix(0,nrow=N,ncol=length(columns),dimnames=list(1:N,columns))
+  pars <- cbind(rnorm(N,mean=origpar[1],sd=origpar[1]/scaler),
+                rnorm(N,mean=origpar[2],sd=origpar[2]/scaler),
+                rnorm(N,mean=origpar[3],sd=origpar[3]/scaler))
+
+# this randomness ignores the strong correlation between r and K
+  for (i in 1:N) {
+     bestSP <- fitSPM(pars[i,],fish,schaefer=TRUE)
+     opar <- bestSP$par
+     msy <- opar[1]*opar[2]/4
+     origLL <- negLL(pars[i,],fish,simpspm)
+     results[i,] <- c(pars[i,],origLL,bestSP$par,bestSP$value,msy,bestSP$counts[1])
+  }
+round(results[order(results[,"-veLL"]),],3)
+round(apply(results,2,range),3)    
+round(apply(results,2,median),3) # central tendency without outliers.
+# now we should increase the number of initial values
+
+```
+#### Producing a Phase plot
+
+```{r phasePlot}
+pars <- c(0.2424, 5173.5972, 2846.0953) # r, K, and Binit, median values
+bestSP <- fitSPM(pars,fish,schaefer=TRUE)
+ans <- displayModel(bestSP$par,fish,schaefer=TRUE,addrmse=TRUE)
+
+# plotprep(width=7,height=5.5) # to avoid using the RStudio plot window
+spmphaseplot(ans,fnt=7)
+```
+#### Generate Bootstrap Confidence Intervals
+
+```{r confint}
+data(dataspm)
+fish <- dataspm$fish
+colnames(fish) <- tolower(colnames(fish))
+pars <- c(r=0.25,K=5500,Binit=2900)
+ans <- fitSPM(pars,fish,schaefer=TRUE,maxiter=1000) #Schaefer version
+answer <- displayModel(ans$par,fish,schaefer=TRUE,addrmse=TRUE)
+reps <- 100       # this might take ~60 seconds, be patient
+startime <- Sys.time()  # how long will this take
+boots <- bootspm(ans$par,fishery=fish,iter=reps,schaefer=TRUE)
+print(Sys.time() - startime)
+str(boots)
+
+dynam <- boots$dynam # 100 biomass time-series
+bootpar <- boots$bootpar # 100 parameter estimates
+rows <- colnames(bootpar)
+
+columns <- c(c(0.025,0.05,0.5,0.95,0.975),"Mean")
+bootCI <- matrix(NA,nrow=length(rows),ncol=length(columns),
+                 dimnames=list(rows,columns))
+for (i in 1:length(rows)) { # i=1
+   tmp <- sort(bootpar[,i])
+   qtil <-  quantile(tmp,probs=c(0.025,0.05,0.5,0.95,0.975),na.rm=TRUE)
+   bootCI[i,] <- c(qtil,mean(tmp,na.rm=TRUE))
+}
+round(bootCI,4)
+
+
+# visualization
+
+par(mfrow=c(3,2),mai=c(0.45,0.45,0.15,0.05),oma=c(0.0,0,0.0,0.0)) 
+par(cex=0.85, mgp=c(1.35,0.35,0), font.axis=7,font=7,font.lab=7)  
+hist(bootpar[,"r"],breaks=25,col=2,main="",xlab="r")
+abline(v=c(bootCI["r",c(2,3,4,6)]),col=c(3,3,3,4),lwd=c(1,2,1,2))
+hist(bootpar[,"K"],breaks=25,col=2,main="",xlab="K")
+abline(v=c(bootCI["K",c(2,3,4,6)]),col=c(3,3,3,4),lwd=c(1,2,1,2))
+hist(bootpar[,"Binit"],breaks=25,col=2,main="",xlab="Binit")
+abline(v=c(bootCI["Binit",c(2,3,4,6)]),col=c(3,3,3,4),lwd=c(1,2,1,2))
+hist(bootpar[,"MSY"],breaks=25,col=2,main="",xlab="MSY")
+abline(v=c(bootCI["MSY",c(2,3,4,6)]),col=c(3,3,3,4),lwd=c(1,2,1,2))
+hist(bootpar[,"Depl"],breaks=25,col=2,main="",xlab="Final Depletion")
+abline(v=c(bootCI["Depl",c(2,3,4,6)]),col=c(3,3,3,4),lwd=c(1,2,1,2))
+hist(bootpar[,"Harv"],breaks=25,col=2,main="",xlab="Final Harvest Rate")
+abline(v=c(bootCI["Harv",c(2,3,4,6)]),col=c(3,3,3,4),lwd=c(1,2,1,2))
+
+# now try with 1000 replicates
+
+# fitted trajectories
+
+years <- fish[,"year"]
+par(mfrow=c(1,1),mai=c(0.45,0.45,0.05,0.05),oma=c(0.0,0,0.0,0.0)) 
+par(cex=0.85, mgp=c(1.35,0.35,0), font.axis=7,font=7,font.lab=7)  
+ymax <- getmaxy(c(dynam[,,"PredCE"],fish[,"cpue"]))
+plot(fish[,"year"],fish[,"cpue"],type="n",ylim=c(0,ymax),xlab="Year",
+     ylab="CPUE",panel.first = grid())
+for (i in 1:reps) lines(years,dynam[i,,"PredCE"],lwd=1,col="grey")
+lines(years,answer$Dynamics$outmat[,"PredCE"],lwd=2,col=2)
+points(years,fish[,"cpue"],cex=1.1,pch=16,col=4)
+percs <- apply(dynam[,,"PredCE"],2,quants)
+arrows(x0=years,y0=percs["5%",],y1=percs["95%",],length=0.03,angle=90,code=3,col=2)
+
+
+```
+
+### References
+
+
+

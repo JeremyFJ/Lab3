@@ -28,9 +28,8 @@ Today, we'll be using Fisheries Stock Assessment `FSA` and `rfishbase` data to l
 Look at individuals that are older than 5 years old (age>5)
 ```{r}
 colnames(RedDrum)
-RD = RedDrum
+data = RedDrum
 glimpse(RD)
-data = RD %>% filter(age > 5)
 dim(data) # prints number of rows, columns
 ```
 
@@ -40,57 +39,35 @@ dim(data) # prints number of rows, columns
 plot(fl~age,data=data)
 ```
 
-In ggplot, the principle is the same, but we use `aes()` (aesthetic) to indicate the x and y variables and we'll use `geom_point()` to indicate how we want to represent the relationship.
-
-```{r}
-ggplot() + geom_point(data=d, aes(x=age, y=fl))
-```
-
-We can customize by adding colour, size, transparency (alpha), and shape (pch).
-
-```{r}
-p1 = p + geom_point(data=d, mapping=aes(x=age, y=fl),
-               colour = "red",
-               size = 4,
-               alpha = 0.6,
-               pch=18)  
-p1
-```
-
 Add x, y, and main title labels with the `labs()` function for both plot and ggplot
-
 ```{r}
-p2 = p1 +  labs(x = "Fork Length (cm)",
+plot = ggplot() + geom_point(data=data, mapping=aes(x=age, y=fl),
+               colour = "black",
+               size = 3,
+               alpha = 0.6,
+               pch=21) + 
+            labs(x = "Fork Length (cm)",
                  y = "Age (years)",
                  title = "Length Age Relationship")
-p2
-```
-
-We can add a trend line with a confidence interval using the `geom_smooth()` or `stat_smooth()` for ggplot objects. Default trend line is generated with: `y~x` but this can be customized to specify your own models. We'll do this later.
-
-```{r}
-p2 + geom_smooth(aes(d$age, d$fl), lwd = 1, se=T)
+plot
 ```
 
 Use histograms to visualize distributions.
-
 ```{r}
-h = ggplot(d, aes(fl))
-h1 = h + geom_histogram(binwidth = 20)
-h1
+RDhist = ggplot(data, aes(fl)) + geom_histogram(binwidth = 20, colour="black", fill="grey")
+RDhist
 ```
 
 ```{r}
-h <- ggplot(d, aes(age))
-h1 <- h + geom_histogram(binwidth = 3)
-h1
+RDhist2 <- ggplot(data, aes(age)) + geom_histogram(binwidth = 3, colour="black", fill="grey")
+RDhist2
 ```
 
 Boxplots are also useful to displaying distributions.
 
 ```{r, fig.height=3,fig.width=4.5}
-b <- ggplot(d, aes(factor(age), fl)) + geom_boxplot()
-b
+RDbox <- ggplot(data, aes(factor(age), fl)) + geom_boxplot()
+RDbox
 ```
 
 `glimpse` Ruffe data from Superior Lake catches in 1992.

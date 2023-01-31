@@ -203,13 +203,9 @@ f.starts <- vbStarts(fl~age,data=RedDrum) # vbStarts is an optimization algorith
 f.fit <- nls(fl~vb(age,Linf,K,t0),data=RedDrum,start=f.starts)
 coef(f.fit)
 ```
-```{r}
-f.boot1 <- car::Boot(f.fit)
-confint(f.boot1)
-```
 
 ```{r}
-ggplot() + geom_point(data=RedDrum, aes(x=age, y=fl)) + geom_line(data=RedDrum, aes(x=age, y=predict(f.fit)), color="red")
+ggplot() + geom_point(data=RedDrum, aes(x=age, y=fl)) + geom_line(data=RedDrum, aes(x=age, y=predict(f.fit)), color="red") + xlab("Age (years)") + ylab("Fork Length (mm)") + ggtitle("Red Drum Length at Age")
 ```
 
 Compare size and maturation relationships of groundfish vs groundsharks.  

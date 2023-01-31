@@ -1,5 +1,5 @@
 ---
-title: "Plotting -- FSA and rfishbase data exploration"
+title: "Data visualization -- FSA and rfishbase data exploration"
 author: "(Your name here)"
 date: "2/3/2022"
 output: html_document

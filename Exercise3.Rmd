@@ -1,0 +1,37 @@
+---
+title: "Exercise3"
+author: "(Your name here)"
+date: "2/3/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+require(FSAdata)
+require(FSA)
+require(tidyverse)
+require(rfishbase)
+```
+
+1) Use these `FSA` datasets to visualize different growth relationships. Label your axis.
+
+`Bonito` Ages and length measurements of Australian Bonito (Sarda australis). 
+- plot Length vs Age, add Sex as a categorical variable
+
+`DarterMahon` Catch and effort data for Fantail Darter (Etheostoma flabellare) from seven removal events conducted by Mahon (1980).
+- plot a histogram of recruits and spawner biomass with different colors
+
+`HerringBWE` Stock and recruitment data for Blackwater Estuary Herring (Clupea harengus), 1962-1997 spawning years.
+- plot and add a line for the linear relationship of spawning stock biomass vs year, then plot spawning stock biomass per recruit vs year 
+
+`BlackDrum2001` Biological data (lengths, weights, ages from otoliths, and sex) for Black Drum (Pogonias cromis) from Virginia waters of the Atlantic Ocean, 2001. (TL mm)
+- plot Weight vs. Length and model their relationship linear and non-linear relationship
+
+2) Use `rfishbase` to compare life histories of two fisheries orders with `popchar`, `maturity`, `popgrowth`, and `fecundity` functions. Explore relationships between variables and produce a meaningful 2x2 or 3x3 panel of life history patterns. 
+
+
+Next week) Exponential and Logistic growth, Von Bertalanffy Individual Growth
+
+
+
+

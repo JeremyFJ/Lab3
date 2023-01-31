@@ -1,0 +1,286 @@
+---
+title: "Plotting -- FSA and rfishbase data exploration"
+author: "(Your name here)"
+date: "2/3/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+lab_path = dirname(rstudioapi::getSourceEditorContext()$path)
+knitr::opts_knit$set(root.dir = lab_path)
+getwd()
+set.seed(9999)
+require(FSAdata) 
+require(FSA)
+require(tidyverse)
+require(rfishbase)
+```
+
+# FSA analyses
+Today, we'll be using Fisheries Stock Assessment `FSA` and `rfishbase` data to look at growth patterns (i.e., Length-Weight and Length-Age). Visualizing population dynamics is critical to fisheries management and so here, we'll look at the fundamentals for plotting in R. Then we'll look at basic linear and non-linear regression analyses that are needed to predict growth patterns.
+
+## Plot and ggplot
+- Red drum age and length data from the Atlantic Coast (reported by NOAA). `FL = fork length`
+- Popular recreational target fish
+- Lifespan of 40-45 years
+
+Look at individuals that are older than 5 years old (age>5)
+```{r}
+colnames(RedDrum)
+RD = RedDrum
+glimpse(RD)
+data = RD %>% filter(age > 5)
+dim(data) # prints number of rows, columns
+```
+
+`~` is used to indicate `y vs x` on an axis. Here, we'll plot fork length vs age
+
+```{r}
+plot(fl~age,data=data)
+```
+
+In ggplot, the principle is the same, but we use `aes()` (aesthetic) to indicate the x and y variables and we'll use `geom_point()` to indicate how we want to represent the relationship.
+
+```{r}
+ggplot() + geom_point(data=d, aes(x=age, y=fl))
+```
+
+We can customize by adding colour, size, transparency (alpha), and shape (pch).
+
+```{r}
+p1 = p + geom_point(data=d, mapping=aes(x=age, y=fl),
+               colour = "red",
+               size = 4,
+               alpha = 0.6,
+               pch=18)  
+p1
+```
+
+Add x, y, and main title labels with the `labs()` function for both plot and ggplot
+
+```{r}
+p2 = p1 +  labs(x = "Fork Length (cm)",
+                 y = "Age (years)",
+                 title = "Length Age Relationship")
+p2
+```
+
+We can add a trend line with a confidence interval using the `geom_smooth()` or `stat_smooth()` for ggplot objects. Default trend line is generated with: `y~x` but this can be customized to specify your own models. We'll do this later.
+
+```{r}
+p2 + geom_smooth(aes(d$age, d$fl), lwd = 1, se=T)
+```
+
+Use histograms to visualize distributions.
+
+```{r}
+h = ggplot(d, aes(fl))
+h1 = h + geom_histogram(binwidth = 20)
+h1
+```
+
+```{r}
+h <- ggplot(d, aes(age))
+h1 <- h + geom_histogram(binwidth = 3)
+h1
+```
+
+Boxplots are also useful to displaying distributions.
+
+```{r, fig.height=3,fig.width=4.5}
+b <- ggplot(d, aes(factor(age), fl)) + geom_boxplot()
+b
+```
+
+`glimpse` Ruffe data from Superior Lake catches in 1992.
+
+```{r}
+ruf = RuffeSLRH92
+colnames(ruf)
+glimpse(ruf)
+```
+
+We can use the `sapply` function to run a for loop. Here, we will tell the function to check all columns for `NA` values. We'll get rid of empty rows for length and weight.   
+
+```{r}
+sapply(ruf,function(x) sum(is.na(x)))
+na_rows = which(is.na(ruf$length) | is.na(ruf$weight))
+ruf = ruf[-c(na_rows),]
+```
+
+Let's plot Length vs Weight relationship of Ruffe with `plot` and `ggplot` and add some labels.
+
+```{r}
+plot(ruf$length,ruf$weight, xlab = "Total Length (mm)", ylab = "Weight (g)",
+     main="Length Weight Relationship of Ruffe")
+
+p <- ggplot()
+
+p + geom_point(data=ruf, mapping=aes(x=length, y=weight)) +
+  labs(x = "Total Length (mm)",
+       y = "Weight (g)",
+       title = "Length Weight Relationship of Ruffe")
+```
+
+
+We can transform data to look at it differently with the `log()` function. Here, we show the linear relationship between Length and Weight. 
+
+```{r}
+plot(log(ruf$length),log(ruf$weight), xlab = "log Total Length (mm)", 
+     ylab = "log Weight (g)")
+```
+
+Now, let's create a simple linear regression model with `lm()`
+
+```{r}
+lm1 <- lm(log(weight)~log(length),data=ruf)
+# Basic summary information is extracted by submitting the saved lm() object to summary() as follows
+summary(lm1)
+```
+Our linear model can be **fit** to a plot with `abline()` in plot. 
+
+```{r}
+plot(log(ruf$length),log(ruf$weight), xlab = "log Total Length (mm)", 
+     ylab = "log Weight (g)")
+abline(lm1, col="red", lwd=2)
+```
+
+How could I write a function to calculate the R^2 value of a linear model? 
+
+```{r}
+plot(log(ruf$length),log(ruf$weight), xlab = "log Total Length (mm)", 
+     ylab = "log Weight (g)")
+abline(lm1, col="red", lwd=2)
+rsq <- function (x, y) {
+  val = cor(x, y) ^ 2
+  val = round(val,3)
+  val
+  }
+text(x=3.4, y=3, col=2, cex=0.8,
+     paste("R2 =", rsq(log(ruf$weight), lm1$fitted.values)))
+```
+
+In **ggplot** we can fit the same regression model with the `geom_smooth()` or `stat_smooth()` functions.
+
+```{r}
+ggplot(ruf, aes(log(length),log(weight))) +
+  geom_point() +
+geom_smooth(method="lm", formula=y~x)+
+annotate("text", x=3.4, y=3, label= paste("R2 =", 
+                          rsq(log(ruf$weight), lm1$fitted.values)))
+```
+
+We can visualize multiple variables on the same plot. Here, we'll look at **categorical** variables such as `sex` in addition to Length vs Weight. We can use `color` or `col` to visualize this variable.
+
+```{r}
+plot(ruf$length,ruf$weight, xlab = "Total Length (mm)", 
+     ylab = "Weight (g)",
+     main="Length Weight of Ruffe", col=ruf$sex)
+legend("topleft", c("Female", "Male", "Unknown"), pch=21,col=1:3, lty=0)
+```
+
+We can also use the shape of the point to visualize other variables, with `pch`
+
+```{r}
+plot(ruf$length,ruf$weight, xlab = "Total Length (mm)", 
+     ylab = "Weight (g)",
+     main="Length Weight of Ruffe",col=c(1,2,3)[ruf$sex], 
+     pch = c(21, 22, 23)[ruf$sex], xlim=c(100,250))
+legend("bottomright", c("Female", "Male", "Unknown"), pch=21:23,col=1:3, lty=0)
+```
+
+We can use stacked barplots to do the same thing.  
+
+```{r}
+ggplot(ruf, aes(length))+geom_bar(aes(fill=sex),width=3)
+```
+
+Sometimes, we have to play around with the plots to understand how best to visualize it. Let's continue to do some exploratory analysis on Ruffe. 
+
+Now, let's model the weight-length relationship of Ruffe with `W=aL^b` where `W`=weight, `L`=Length, `a`=rate of change (intercept), `b`=pattern growth of species. We can use `nls()` (non-linear least squares) to utilize this model.
+
+```{r}
+# W = aL^b
+model_ruf = nls(weight~a*length^b, start=list(a=160,b=3), data=ruf)
+summary(model_ruf)
+```
+
+Use `predict()` to calculate the y-value (weight) based on the model we created above
+
+```{r}
+ggplot(ruf, aes(x=length,y=weight)) +
+  geom_point() +
+  geom_line(aes(x=length,y=predict(model_ruf)),col="blue")+
+  labs(x = "Length (mm)",
+       y = "Weight (g)",
+       title = "Weight Length relationship of Lake Superior Ruffe")
+
+```
+
+For doing exploratory data analysis, it's good to create panels of different plotted relationships. Unfortunately, `ggplot` and `plot` objects cannot be combined with conventional panel generators. So, we'll use one or the other here.
+
+With `ggplot` it is simple to combine plots in a panel with the `gridExtra` package.
+
+```{r, eval=F}
+install.packages('gridExtra')
+```
+
+
+```{r}
+title="Weight Length relationship of Lake Superior Ruffe"
+rufp1 = ggplot(ruf, aes(log(length),log(weight))) +
+  geom_point() +
+geom_smooth(method="lm", formula=y~x)+
+annotate("text", x=3.4, y=3, label= paste("R2 =", 
+                          rsq(log(ruf$weight), lm1$fitted.values)))+
+  labs(x = "log (Length)",
+       y = "log (Width)",
+       title = title)
+
+rufp2 = ggplot(ruf, aes(x=length,y=weight)) +
+  geom_point() +
+  geom_line(aes(x=length,y=predict(model_ruf)),col="blue")+
+  labs(x = "Length (mm)",
+       y = "Weight (g)",
+       title = "")
+
+gridExtra::grid.arrange(rufp1, rufp2)
+```
+
+Now, let's use rfishbase and do some exploratory data analysis. Let's compare size and maturation relationships of groundfish vs groundsharks.  
+
+`popchar` Wmax, Lmax, age (tmax)
+`maturity` minimum age at maturation (AgeMatMin), minimum length at maturation (LengthMatMin)
+`popgrowth` size at maturity (Lm), age (tmax)
+
+```{r, fig.height=4}
+library(rfishbase)
+
+fishdat1 = popchar(species_list = species_list(Order = "Pleuronectiformes")) 
+fishdat_M1 = maturity(fishdat1$Species)
+fishdat_L1 = popgrowth(fishdat1$Species)
+fishdat2 = popchar(species_list = species_list(Order = "Carcharhiniformes"))
+fishdat_M2 = maturity(fishdat2$Species)
+fishdat_L2 = popgrowth(fishdat2$Species)
+
+p1 = ggplot(fishdat1, aes(x=tmax,y=Lmax)) +
+  geom_point()+labs(x="Age", y="Maximum length", title="Pleuronectiformes")
+p2 = ggplot(fishdat2, aes(x=tmax,y=Lmax)) +
+  geom_point()+labs(x="Age",y="", title="Carcharhiniformes")
+p3 = ggplot(fishdat_M1, aes(x=AgeMatMin,y=LengthMatMin)) +
+  geom_point()+labs(x="Minimum age at maturity", y="Minimum length at maturity", title="")
+p4 = ggplot(fishdat_M2, aes(x=AgeMatMin,y=LengthMatMin)) +
+  geom_point()+labs(x="Minimum age at maturity", y="", title="")
+p5 = ggplot(fishdat_L1, aes(x=tmax,y=Lm)) +
+  geom_point()+labs(x="Age", y="Mean size at maturity", title="")
+p6 = ggplot(fishdat_L2, aes(x=tmax,y=Lm)) +
+  geom_point()+labs(x="Age", y="", title="")
+
+gridExtra::grid.arrange(p1,p2,p3,p4,p5,p6,nrow=3,ncol=2)
+```
+
+Now, let's plot life history patterns for other species found in `FSA` and `rfishbase`
+
+***Exercise***
+

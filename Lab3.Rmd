@@ -115,37 +115,57 @@ ggplot() + geom_point(data=ruf, aes(x=log(length), y=log(weight))) +
   ylab("log Weight (g)")
 ```
 
+```{r}
+par(mfrow=c(2,2))
+plot(lm1)
+```
+
 In **ggplot** we can fit the same regression model with the `geom_smooth()` or `stat_smooth()` functions.
 ```{r}
 ggplot(ruf, aes(log(length),log(weight))) +
   geom_point() +
-geom_smooth(method="lm", formula=y~x)+
-annotate("text", x=3.4, y=3, label= paste("R2 =", 
-                          rsq(log(ruf$weight), lm1$fitted.values)))
+geom_smooth(method="lm", formula=y~x, color="red") +
+  xlab("log Total Length (mm)") + 
+  ylab("log Weight (g)") +
+annotate("text", x=3.4, y=3, label= paste("R2 =", round(summary(lm1)$r.squared, 3)))
 ```
 
 Visualize `length`, `weight` and `sex`
 ```{r}
-ggplot() + geom_point(data=ruf, aes(x=length, y=weight, color=sex)) + xlab("Total Length (mm)") + ylab("Weight (g)") +
-  ggtitle("Length at Weight of Ruffe") + scale_color_manual(values = c("female" = "maroon", "male" = "skyblue3", "unknown" = "grey55"))
+ggplot() + 
+  geom_point(data=ruf, aes(x=length, y=weight, color=sex)) + 
+  xlab("Total Length (mm)") + 
+  ylab("Weight (g)") +
+  ggtitle("Length at Weight of Ruffe") + 
+  scale_color_manual(values = c("female" = "maroon", "male" = "skyblue3", "unknown" = "grey55"))
 ```
 
 We can also use the shape 
 ```{r}
-ggplot() + geom_point(data=ruf, aes(x=length, y=weight, shape=sex, color=sex), size=2.5) + xlab("Total Length (mm)") + ylab("Weight (g)") +
-  ggtitle("Length at Weight of Ruffe") + scale_color_manual(values = c("female" = "maroon", "male" = "skyblue3", "unknown" = "grey55"))
+ggplot() + 
+  geom_point(data=ruf, aes(x=length, y=weight, shape=sex, color=sex), size=2.5) + 
+  xlab("Total Length (mm)") + ylab("Weight (g)") +
+  ggtitle("Length at Weight of Ruffe") + 
+  scale_color_manual(values = c("female" = "maroon", "male" = "skyblue3", "unknown" = "grey55"))
 ```
 
 We can use stacked barplots to do the same thing.  
 ```{r}
-ggplot(ruf, aes(length))+geom_bar(aes(fill=sex),width=3) + xlab("Total Length (mm)") + scale_fill_manual(values = c("female" = "maroon", "male" = "skyblue3", "unknown" = "grey55")) + ggtitle("Length Distribution of Ruffe")
+ggplot(ruf, aes(length)) +
+  geom_bar(aes(fill=sex),width=3) + 
+  xlab("Total Length (mm)") + 
+  scale_fill_manual(values = c("female" = "maroon", "male" = "skyblue3", "unknown" = "grey55")) + 
+  ggtitle("Length Distribution of Ruffe")
 ```
 
 Now, let's model the `Weight-Length` relationship of Ruffe with `W=aL^b` where `W`=weight, `L`=Length, `a`=rate of change (intercept), `b`=pattern growth of species.
 $$
 W = aL^b
 $$
-Use `nls()` to develop a non-linear model. Parameters `a` and `b` are estimated from the given values
+
+A *linear* equation is in the form `y = mx + b`.
+This is a non-linear equation because `x` in this case `L` is to a power. 
+Use `nls()` to develop a non-linear model. Parameters `a` and `b` are estimated from the given values. Our model will estimate the best parameters by minimizing residuals.
 ```{r}
 model_ruf = nls(weight~a*length^b, start=list(a=160,b=3), data=ruf)
 summary(model_ruf)
@@ -153,22 +173,24 @@ coef(model_ruf)
 ```
 
 Use `predict()` to calculate the y-value (weight) based on the model we created above
-
 ```{r}
 ggplot(ruf, aes(x=length,y=weight)) +
   geom_point() +
-  geom_line(aes(x=length,y=predict(model_ruf)),col="red")+
+  geom_line(data=ruf, aes(x=length,y=predict(model_ruf)), col="red")+
   labs(x = "Length (mm)",
        y = "Weight (g)",
        title = "Weight Length relationship of Lake Superior Ruffe")
+```
 
+We can evaluate our model by plotting the residuals
+```{r}
+plot(model_ruf)
 ```
 
 Install `gridExtra` so that we can combine ggplots 
 ```{r, eval=F}
 # install.packages('gridExtra')
 ```
-
 
 ```{r}
 title="Weight Length relationship of Lake Superior Ruffe"
@@ -189,11 +211,12 @@ rufp2 = ggplot(ruf, aes(x=length,y=weight)) +
 gridExtra::grid.arrange(rufp1, rufp2)
 ```
 
-von Bertalanffy growth function (VBGF) in R
+von Bertalanffy growth function (VBGF) in R -- Red Drum
 [resource](https://www.r-bloggers.com/2019/12/von-bertalanffy-growth-plots-i/)
 $$
 L(a) = L_{inf}(1-e^{(-k(a-t_0))})
 $$
+
 ```{r}
 vb = vbFuns(param="Typical")
 ```
@@ -205,7 +228,12 @@ coef(f.fit)
 ```
 
 ```{r}
-ggplot() + geom_point(data=RedDrum, aes(x=age, y=fl)) + geom_line(data=RedDrum, aes(x=age, y=predict(f.fit)), color="red") + xlab("Age (years)") + ylab("Fork Length (mm)") + ggtitle("Red Drum Length at Age")
+ggplot() + 
+  geom_point(data=RedDrum, aes(x=age, y=fl)) + 
+  geom_line(data=RedDrum, aes(x=age, y=predict(f.fit)), color="red") + 
+  xlab("Age (years)") + 
+  ylab("Fork Length (mm)") + 
+  ggtitle("Red Drum Length at Age")
 ```
 
 Compare size and maturation relationships of groundfish vs groundsharks.  
@@ -213,6 +241,7 @@ Compare size and maturation relationships of groundfish vs groundsharks.
 `popchar` Wmax, Lmax, age (tmax)
 `maturity` minimum age at maturation (AgeMatMin), minimum length at maturation (LengthMatMin)
 `popgrowth` size at maturity (Lm), age (tmax)
+
 ```{r, fig.height=4}
 library(rfishbase)
 

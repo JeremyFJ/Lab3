@@ -20,7 +20,7 @@ require(rfishbase)
 # FSA analyses
 Today, we'll be using Fisheries Stock Assessment `FSA` and `rfishbase` data to look at growth patterns (i.e., Length-Weight and Length-Age). Visualizing population dynamics is critical to fisheries management and so here, we'll look at the fundamentals for plotting in R. Then we'll look at basic linear and non-linear regression analyses that are needed to predict growth patterns.
 
-## Plot and ggplot
+## Growth History
 - Red drum age and length data from the Atlantic Coast (reported by NOAA). `FL = fork length`
 - Popular recreational target fish
 - Lifespan of 40-45 years
@@ -29,7 +29,7 @@ Look at individuals that are older than 5 years old (age>5)
 ```{r}
 colnames(RedDrum)
 data = RedDrum
-glimpse(RD)
+glimpse(data)
 dim(data) # prints number of rows, columns
 ```
 
@@ -64,14 +64,15 @@ RDhist2
 ```
 
 Boxplots are also useful to displaying distributions.
-
-```{r, fig.height=3,fig.width=4.5}
-RDbox <- ggplot(data, aes(factor(age), fl)) + geom_boxplot()
+```{r}
+RDbox <- ggplot(data, aes(factor(age), fl)) + geom_boxplot() + theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) +
+  xlab("Age (years)") + ylab("Fork Length (mm)") + ggtitle("Red Drum growth")
 RDbox
 ```
 
-`glimpse` Ruffe data from Superior Lake catches in 1992.
+## Biological Growth Patterns
 
+`glimpse` Ruffe data from Superior Lake catches in 1992.
 ```{r}
 ruf = RuffeSLRH92
 colnames(ruf)
@@ -86,41 +87,37 @@ na_rows = which(is.na(ruf$length) | is.na(ruf$weight))
 ruf = ruf[-c(na_rows),]
 ```
 
-Let's plot Length vs Weight relationship of Ruffe with `plot` and `ggplot` and add some labels.
-
+Let's plot Length vs Weight relationship of Ruffe with `plot` and `ggplot` and add some labels. 
 ```{r}
-plot(ruf$length,ruf$weight, xlab = "Total Length (mm)", ylab = "Weight (g)",
-     main="Length Weight Relationship of Ruffe")
-
-p <- ggplot()
-
-p + geom_point(data=ruf, mapping=aes(x=length, y=weight)) +
+ruf_plot = ggplot() + geom_point(data=ruf, mapping=aes(x=length, y=weight)) +
   labs(x = "Total Length (mm)",
        y = "Weight (g)",
        title = "Length Weight Relationship of Ruffe")
+ruf_plot
 ```
 
 
-We can transform data to look at it differently with the `log()` function. Here, we show the linear relationship between Length and Weight. 
-
+We can transform data with the `log()` function to discover patterns in the data. Here, we show the **linear** relationship between Length and Weight. 
 ```{r}
-plot(log(ruf$length),log(ruf$weight), xlab = "log Total Length (mm)", 
-     ylab = "log Weight (g)")
+ruf_plot = ggplot() + geom_point(data=ruf, mapping=aes(x=log(length), y=log(weight))) +
+  labs(x = "Total Length (mm)",
+       y = "Weight (g)",
+       title = "Length Weight Relationship of Ruffe")
+ruf_plot
 ```
 
-Now, let's create a simple linear regression model with `lm()`
-
+Create a simple linear regression model with `lm()`
 ```{r}
-lm1 <- lm(log(weight)~log(length),data=ruf)
+lm1 <- lm(data=ruf, log(weight)~log(length))
 # Basic summary information is extracted by submitting the saved lm() object to summary() as follows
 summary(lm1)
 ```
-Our linear model can be **fit** to a plot with `abline()` in plot. 
-
+Fit our line
 ```{r}
-plot(log(ruf$length),log(ruf$weight), xlab = "log Total Length (mm)", 
-     ylab = "log Weight (g)")
-abline(lm1, col="red", lwd=2)
+ggplot() + geom_point(data=ruf, aes(x=log(length), y=log(weight))) + 
+  geom_line(data=ruf, aes(x=log(length), y=lm1$fitted.values), color="red") + 
+  xlab("log Total Length (mm)") + 
+  ylab("log Weight (g)")
 ```
 
 How could I write a function to calculate the R^2 value of a linear model? 

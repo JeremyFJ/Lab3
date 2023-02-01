@@ -1,0 +1,49 @@
+---
+title: "Assignment 3"
+author: "(Your name here)"
+date: "2/2/2023"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+lab_path = dirname(rstudioapi::getSourceEditorContext()$path)
+knitr::opts_knit$set(root.dir = lab_path)
+getwd()
+set.seed(9999)
+require(FSAdata) 
+require(FSA) # you may need to install this package
+require(tidyverse)
+require(rfishbase)
+```
+**Plot like you are turning in a professional fisheries report**
+1) Use these `FSA` datasets to visualize life history patterns and growth curves. Label your axes.
+
+`HerringBWE` Stock and recruitment data for Blackwater Estuary Herring (Clupea harengus), 1962-1997 spawning years.
+- plot `spawning stock biomass` vs. `year`
+- fit a linear regression
+- plot `spawning stock biomass` per `recruit` vs `year`
+- plot residuals
+
+`Bonito` Ages and length measurements of Australian Bonito (Sarda australis). 
+- plot `Length` vs `Age`, add `Sex` as a categorical variable
+- fit VBGF
+- plot residuals
+
+## Question
+Using VBGF, what is the predicted length of a 1.5 year old Bonito?
+$$
+L(a) = L_{inf}(1-e^{(-k(a-t_0))})
+$$
+
+`BlackDrum2001` Biological data (lengths, weights, ages from otoliths, and sex) for Black Drum (Pogonias cromis) from Virginia waters of the Atlantic Ocean, 2001. (TL mm). *HINT* you might need to remove NA values when fitting regression models.
+
+- plot `Weight` vs. `Length`
+- transform the plot with `log` 
+- model their linear and non-linear relationship (**NOTE** for non-linear, use `nls` and the weight at length equation)
+- plot both fitted plots next to each other
+
+
+
+
+

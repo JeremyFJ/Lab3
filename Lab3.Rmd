@@ -1,7 +1,7 @@
 ---
-title: "Regression and Life History parameters, FSA and rfishbase data exploration"
+title: "Life History and Population Dynamics -- part 1"
 author: "(Your name here)"
-date: "2/2/2022"
+date: "2/2/2023"
 output: html_document
 ---
 
@@ -171,7 +171,7 @@ A *linear* equation is in the form `y = mx + b`.
 This is a non-linear equation because `x` in this case `L` is to a power. 
 Use `nls()` to develop a non-linear model. Parameters `a` and `b` are estimated from the given values. Our model will estimate the best parameters by minimizing residuals.
 ```{r}
-model_ruf = (weight~a*length^b, start=list(a=160,b=3), data=ruf)
+model_ruf = nls(weight~a*length^b, start=list(a=160,b=3), data=ruf)
 summary(model_ruf)
 coef(model_ruf)
 ```
@@ -244,6 +244,41 @@ ggplot() +
 plot(f.fit)
 # plot(nlstools::nlsResiduals(f.fit))
 # Shows autocorrelation, qq plot, and standardized residuals
+```
+
+```{r}
+
+```
+
+# Population Dynamics
+## Mortality 
+```{r}
+# ---- Mortality rate ----------------------------
+
+# get mortality from Then.etal.2014
+getMtmax = function(lifespan){		
+		M = 4.899 * lifespan^-0.916
+		M
+}
+
+# get mortality using Dulvy.etal.2014's method
+getMDulvy.etal.2014 = function(lifespan, agemat){
+	w = (lifespan+agemat)/2 # average lifespan
+	M = 1/w
+	M
+}
+```
+
+```{r}
+prio_growth = popgrowth(Species="Prionace glauca")
+prio_mat = maturity(Species="Prionace glauca")
+```
+
+```{r}
+prio_lifespan = mean(prio_growth$tmax, na.rm=T)
+prio_agemat = mean(prio_mat$AgeMatMin, na.rm=T)
+paste0("Then.etal.2014 Natural Mortality rate: ", round(getMtmax(prio_lifespan), 3))
+paste0("Dulvy.etal.2014 Natural Mortality rate: ", round(getMDulvy.etal.2014(prio_lifespan, prio_agemat), 3))
 ```
 
 Compare size and maturation relationships of groundfish vs groundsharks.  

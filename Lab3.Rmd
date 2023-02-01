@@ -1,7 +1,7 @@
 ---
-title: "Data visualization -- FSA and rfishbase data exploration"
+title: "Regression and Life History parameters, FSA and rfishbase data exploration"
 author: "(Your name here)"
-date: "2/3/2022"
+date: "2/2/2022"
 output: html_document
 ---
 
@@ -71,13 +71,12 @@ RDbox
 ```{r}
 ruf = RuffeSLRH92
 colnames(ruf)
-glimpse(ruf)
 ```
 
 We can use the `sapply` function to run a for loop. Here, we will tell the function to check all columns for `NA` values. We'll get rid of empty rows for length and weight.   
 
 ```{r}
-sapply(ruf,function(x) sum(is.na(x)))
+sapply(ruf,function(x) sum(is.na(x))) # ?sapply
 na_rows = which(is.na(ruf$length) | is.na(ruf$weight))
 ruf = ruf[-c(na_rows),]
 ```
@@ -115,9 +114,14 @@ ggplot() + geom_point(data=ruf, aes(x=log(length), y=log(weight))) +
   ylab("log Weight (g)")
 ```
 
+Look at the goodness of fit.
 ```{r}
 par(mfrow=c(2,2))
 plot(lm1)
+# Residuals - difference between observed and predicted values
+# QQ plot - comparing two probability distributions 
+# Scale-Location - spread of residuals
+# Leverage - influence of data points on residuals
 ```
 
 In **ggplot** we can fit the same regression model with the `geom_smooth()` or `stat_smooth()` functions.
@@ -127,9 +131,9 @@ ggplot(ruf, aes(log(length),log(weight))) +
 geom_smooth(method="lm", formula=y~x, color="red") +
   xlab("log Total Length (mm)") + 
   ylab("log Weight (g)") +
-annotate("text", x=3.4, y=3, label= paste("R2 =", round(summary(lm1)$r.squared, 3)))
+annotate("text", x=3.4, y=3, label= paste("R2 =", round(summary(lm1)$r.squared, 3))) # retrieve R-squared value
 ```
-
+## Non-linear relationships
 Visualize `length`, `weight` and `sex`
 ```{r}
 ggplot() + 
@@ -167,7 +171,7 @@ A *linear* equation is in the form `y = mx + b`.
 This is a non-linear equation because `x` in this case `L` is to a power. 
 Use `nls()` to develop a non-linear model. Parameters `a` and `b` are estimated from the given values. Our model will estimate the best parameters by minimizing residuals.
 ```{r}
-model_ruf = nls(weight~a*length^b, start=list(a=160,b=3), data=ruf)
+model_ruf = (weight~a*length^b, start=list(a=160,b=3), data=ruf)
 summary(model_ruf)
 coef(model_ruf)
 ```
@@ -218,7 +222,7 @@ L(a) = L_{inf}(1-e^{(-k(a-t_0))})
 $$
 
 ```{r}
-vb = vbFuns(param="Typical")
+vb = vbFuns(param="Typical") # from FSA package
 ```
 
 ```{r}
@@ -234,6 +238,12 @@ ggplot() +
   xlab("Age (years)") + 
   ylab("Fork Length (mm)") + 
   ggtitle("Red Drum Length at Age")
+```
+
+```{r}
+plot(f.fit)
+# plot(nlstools::nlsResiduals(f.fit))
+# Shows autocorrelation, qq plot, and standardized residuals
 ```
 
 Compare size and maturation relationships of groundfish vs groundsharks.  

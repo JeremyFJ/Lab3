@@ -19,10 +19,12 @@ require(rfishbase)
 
 # FSA analyses
 Basic linear and non-linear regression analyses for predicting growth patterns.
+[OpenFisheries](https://www.openfisheries.org/)
+[Intro to R](https://derekogle.com/IFAR/)
 
 ## Growth History
 ### Red Drum
-- Red drum age and length data from the Atlantic Coast (reported by OpenFisheries). `FL = fork length`
+- Red drum age and length data from the Southern Atlantic Coast (reported by OpenFisheries). `FL = fork length`
 - Popular recreational target fish
 - Lifespan of 40-45 years
 
@@ -70,7 +72,7 @@ RDbox
 ### Ruffe
 `glimpse` Ruffe data from Superior Lake catches in 1992. 
 
-The ruffe is an aggressive fish. It has a rapid population growth. The ruffe eats a variety of foods. The ruffe has a lack of natural predators which creates the potential to displace other species in newly invaded areas and to cause the native fish populations to decrease.
+The ruffe is an aggressive invasive fish. It has a rapid population growth. The ruffe eats a variety of foods. The ruffe has a lack of natural predators which creates the potential to displace other species in newly invaded areas and to cause the native fish populations to decrease.
 ```{r}
 ruf = RuffeSLRH92
 colnames(ruf)
@@ -149,10 +151,9 @@ ggplot() +
 We can also use the shape 
 ```{r}
 ggplot() + 
-  geom_point(data=ruf, aes(x=length, y=weight, shape=sex, color=sex), size=2.5) + 
+  geom_point(data=ruf, aes(x=length, y=weight, shape=sex), size=2.5) + 
   xlab("Total Length (mm)") + ylab("Weight (g)") +
-  ggtitle("Length at Weight of Ruffe") + 
-  scale_color_manual(values = c("female" = "maroon", "male" = "skyblue3", "unknown" = "grey55"))
+  ggtitle("Length at Weight of Ruffe")
 ```
 
 We can use stacked barplots to do the same thing.  
@@ -275,7 +276,8 @@ Gruffe = rfishbase::popgrowth(species_list = c("Gymnocephalus cernua"))
 
 ```{r}
 agemat = rbind(Mruffe$AgeMatMin, Mruffe$AgeMatMin2)
-
+agemat = mean(agemat[1,] + agemat[2,], na.rm=T)
+lifespan = 
 
 ```
 

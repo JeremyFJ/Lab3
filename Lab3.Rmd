@@ -21,6 +21,7 @@ require(rfishbase)
 Basic linear and non-linear regression analyses for predicting growth patterns.
 
 ## Growth History
+### Red Drum
 - Red drum age and length data from the Atlantic Coast (reported by OpenFisheries). `FL = fork length`
 - Popular recreational target fish
 - Lifespan of 40-45 years
@@ -41,62 +42,62 @@ plot = ggplot() + geom_point(data=data, mapping=aes(x=age, y=fl),
                pch=21) +  # point shape
             labs(x = "Fork Length (cm)",
                  y = "Age (years)",
-                 title = "Length Age Relationship")
+                 title = "Length at Age Relationship")
 plot
 ```
 
 Use histograms to visualize distributions.
 ```{r}
 RDhist = ggplot(data, aes(fl)) + geom_histogram(binwidth = 20, colour="black", fill="grey") +
-          xlab("Fork Length (mm)") + ylab("Count") + ggtitle("Red Drum length distribution")
+          xlab("Fork Length (mm)") + ylab("Count") + ggtitle("Red Drum Length Distribution")
 RDhist
 ```
 
 ```{r}
 RDhist2 <- ggplot(data, aes(age)) + geom_histogram(binwidth = 3, colour="black", fill="grey") +
-            xlab("Age (years)") + ylab("Count") + ggtitle("Red Drum age distribution")
+            xlab("Age (years)") + ylab("Count") + ggtitle("Red Drum Age Distribution")
 RDhist2
 ```
 
 Boxplots are also useful to displaying distributions.
 ```{r}
 RDbox <- ggplot(data, aes(factor(age), fl)) + geom_boxplot() + theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) +
-  xlab("Age (years)") + ylab("Fork Length (mm)") + ggtitle("Red Drum growth distribution")
+  xlab("Age (years)") + ylab("Fork Length (mm)") + ggtitle("Red Drum Growth Distribution")
 RDbox
 ```
 
 ## Biological Growth Patterns
+### Ruffe
+`glimpse` Ruffe data from Superior Lake catches in 1992. 
 
-`glimpse` Ruffe data from Superior Lake catches in 1992.
+The ruffe is an aggressive fish. It has a rapid population growth. The ruffe eats a variety of foods. The ruffe has a lack of natural predators which creates the potential to displace other species in newly invaded areas and to cause the native fish populations to decrease.
 ```{r}
 ruf = RuffeSLRH92
 colnames(ruf)
 ```
 
 We can use the `sapply` function to run a for loop. Here, we will tell the function to check all columns for `NA` values. We'll get rid of empty rows for length and weight.   
-
 ```{r}
 sapply(ruf,function(x) sum(is.na(x))) # ?sapply
 na_rows = which(is.na(ruf$length) | is.na(ruf$weight))
 ruf = ruf[-c(na_rows),]
 ```
 
-Let's plot Length vs Weight relationship of Ruffe with `plot` and `ggplot` and add some labels. 
+Plot Length vs Weight relationship of Ruffe with `plot` and `ggplot` and add some labels. 
 ```{r}
 ruf_plot = ggplot() + geom_point(data=ruf, mapping=aes(x=length, y=weight)) +
   labs(x = "Total Length (mm)",
        y = "Weight (g)",
-       title = "Length Weight Relationship of Ruffe")
+       title = "Length and Weight Relationship of Ruffe")
 ruf_plot
 ```
-
 
 We can transform data with the `log()` function to discover patterns in the data. Here, we show the **linear** relationship between Length and Weight. 
 ```{r}
 ruf_plot = ggplot() + geom_point(data=ruf, mapping=aes(x=log(length), y=log(weight))) +
-  labs(x = "Total Length (mm)",
-       y = "Weight (g)",
-       title = "Length Weight Relationship of Ruffe")
+  labs(x = "log Total Length (mm)",
+       y = "log Weight (g)",
+       title = "Length and Weight Relationship of Ruffe")
 ruf_plot
 ```
 
@@ -133,6 +134,7 @@ geom_smooth(method="lm", formula=y~x, color="red") +
   ylab("log Weight (g)") +
 annotate("text", x=3.4, y=3, label= paste("R2 =", round(summary(lm1)$r.squared, 3))) # retrieve R-squared value
 ```
+
 ## Non-linear relationships
 Visualize `length`, `weight` and `sex`
 ```{r}
@@ -197,7 +199,7 @@ Install `gridExtra` so that we can combine ggplots
 ```
 
 ```{r}
-title="Weight Length relationship of Lake Superior Ruffe"
+title="Weight and Length Relationship of Lake Superior Ruffe"
 rufp1 = ggplot(ruf, aes(log(length),log(weight))) +
   geom_point() +
 geom_line(aes(x=log(length), y=log(predict(model_ruf))), color="red") +
@@ -246,12 +248,9 @@ plot(f.fit)
 # Shows autocorrelation, qq plot, and standardized residuals
 ```
 
-```{r}
-
-```
-
 # Population Dynamics
-## Mortality 
+
+## Mortality rate
 ```{r}
 # ---- Mortality rate ----------------------------
 
@@ -269,26 +268,38 @@ getMDulvy.etal.2014 = function(lifespan, agemat){
 }
 ```
 
+## Exponential Population Growth
+$$
+N_t = N_0(e^{(b-d)t})
+$$
+```{r examplebox2.1}
+b = c(0.1,0.1,0.1) # birth rates
+d = c(0.04,0.1,0.125) # death rates
+N0 = c(500,500,500) # starting population number
+Time = seq(0,20,0.5) # time steps
+Nt = matrix(NA, nrow = length(Time), ncol = 3)
+for (i in 1:3){
+  Nt[,i] = N0[i]*exp((b[i]-d[i])*Time)
+}
+plot(Nt[,1]~Time, type = "l", ylim = range(Nt))
+lines(Nt[,2]~Time, col = "red")
+lines(Nt[,3]~Time, col = "blue")
+```
+
+## Logistic Population Growth
+$$
+N_{t+1} = N_t + rN_t(1-N_t/K) - C_t 
+$$
 ```{r}
-prio_growth = popgrowth(Species="Prionace glauca")
-prio_mat = maturity(Species="Prionace glauca")
+r = 0.5 # intrinsic growth rate
+K = 1000 # carrying capacity
+N0 = 50 # starting population number
+Time = seq(0,25,1) # time
+Nt = c()
+Nt[1] = N0
+Ct = 10 # catch or harvest
+for (i in 1:25){
+  Nt[i+1] = Nt[i] + r*Nt[i]*(1-Nt[i]/K) - Ct
+}
+plot(Nt~Time, type = "l", ylim = range(Nt))
 ```
-
-```{r}
-prio_lifespan = mean(prio_growth$tmax, na.rm=T)
-prio_agemat = mean(prio_mat$AgeMatMin, na.rm=T)
-paste0("Then.etal.2014 Natural Mortality rate: ", round(getMtmax(prio_lifespan), 3))
-paste0("Dulvy.etal.2014 Natural Mortality rate: ", round(getMDulvy.etal.2014(prio_lifespan, prio_agemat), 3))
-```
-
-Compare size and maturation relationships of groundfish vs groundsharks.  
-
-`popchar` Wmax, Lmax, age (tmax)
-`maturity` minimum age at maturation (AgeMatMin), minimum length at maturation (LengthMatMin)
-`popgrowth` size at maturity (Lm), age (tmax)
-
-```{r, fig.height=4}
-library(rfishbase)
-
-```
-

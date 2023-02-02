@@ -12,7 +12,7 @@ knitr::opts_knit$set(root.dir = lab_path)
 getwd()
 set.seed(9999)
 require(FSAdata) 
-require(FSA) # you may need to install this package
+require(FSA) 
 require(tidyverse)
 require(rfishbase)
 ```
@@ -72,7 +72,7 @@ RDbox
 ### Ruffe
 `glimpse` Ruffe data from Superior Lake catches in 1992. 
 
-The ruffe is an aggressive invasive fish. It has a rapid population growth. The ruffe eats a variety of foods. The ruffe has a lack of natural predators which creates the potential to displace other species in newly invaded areas and to cause the native fish populations to decrease.
+The ruffe is native to many lakes in Eurasia, but is an aggressive invasive fish in the Great Lakes. It has a rapid population growth and eats a variety of foods. The ruffe has a lack of natural predators and is a strong competitor for resources.
 ```{r}
 ruf = RuffeSLRH92
 colnames(ruf)
@@ -151,7 +151,7 @@ ggplot() +
 We can also use the shape 
 ```{r}
 ggplot() + 
-  geom_point(data=ruf, aes(x=length, y=weight, shape=sex), size=2.5) + 
+  geom_point(data=ruf, aes(x=length, y=weight, shape=sex), size=2) + 
   xlab("Total Length (mm)") + ylab("Weight (g)") +
   ggtitle("Length at Weight of Ruffe")
 ```
@@ -165,10 +165,14 @@ ggplot(ruf, aes(length)) +
   ggtitle("Length Distribution of Ruffe")
 ```
 
-Now, let's model the `Weight-Length` relationship of Ruffe with `W=aL^b` where `W`=weight, `L`=Length, `a`=rate of change (intercept), `b`=pattern growth of species.
+Now, let's model the `Weight-Length` relationship of ruffe
 $$
 W = aL^b
 $$
+W = weight
+L = length
+a = species: rate of size change
+b = species: growth pattern (usually around 3)
 
 A *linear* equation is in the form `y = mx + b`.
 This is a non-linear equation because `x` in this case `L` is to a power. 
@@ -223,6 +227,10 @@ von Bertalanffy growth function (VBGF) in R -- Red Drum
 $$
 L(a) = L_{inf}(1-e^{(-k(a-t_0))})
 $$
+Linf = asymptotic size
+K = growth coefficient
+t0 = theoretical age when size=0
+a = age
 
 ```{r}
 vb = vbFuns(param="Typical") # from FSA package
@@ -251,7 +259,11 @@ plot(f.fit)
 
 # Population Dynamics
 
-## Mortality rate
+## Predicting growth rate of a population
+*Parameters that we need*
+- Lifespan
+- Fecundity
+- Age at Maturation
 ```{r}
 # ---- Mortality rate ----------------------------
 
@@ -261,24 +273,52 @@ getMtmax = function(lifespan){
 		M
 }
 
-# get mortality using Dulvy.etal.2014's method
-getMDulvy.etal.2014 = function(lifespan, agemat){
+# get mortality using Dulvy.etal.2004's method
+getMDulvy.etal.2004 = function(lifespan, agemat){
 	w = (lifespan+agemat)/2 # average lifespan
 	M = 1/w
 	M
 }
+
+getRmax= function(method = "Smith.etal.1998", mortality = "Then.etal.2014", fec = NULL, litter = NULL, cycle = NULL, lifespan, agemat){
+
+  # Calculate natural mortality rate
+	if (mortality== "Dulvy.etal.2004") M = getMDulvy.etal.2004(lifespan = lifespan, agemat = agemat)
+	if (mortality== "Then.etal.2014") M = getMtmax(lifespan = lifespan)
+	if (is.numeric(mortality)) M = mortality
+
+	if(method=="Smith.etal.1998"){
+		tmax = lifespan
+		tmat = agemat
+		if (is.null(fec)) fec = litter/2/cycle else fec = fec
+		Z<-1.5*M
+	
+		#this is equation 7 in the manuscript
+		l_alpha<-(1-exp(-(Z)))/((fec)*(1-exp(-(Z*(tmax-tmat+1)))))
+
+		#this is equation 6 in the manuscript
+		eq6 <- function(reb) 1-exp(-(M+reb))-l_alpha*(fec)*1.25*exp(-reb*tmat)*(1-exp(-(M+reb)*(tmax-tmat+1)))
+		r_Z<-uniroot(eq6, c(0,5), tol=1e-8)
+		return(r_Z$root*2)
+	} 
+	
+}
 ```
 
+Look at Spiny Dogfish in the Northwest Atlantic.
 ```{r}
-Mruffe = rfishbase::maturity(species_list = c("Gymnocephalus cernua"))
-Gruffe = rfishbase::popgrowth(species_list = c("Gymnocephalus cernua"))
+spinyLife = subset(popgrowth(species_list = c("Squalus acanthias")), Locality=="Northwestern Atlantic")
+spinyFec = fecundity(species_list = c("Squalus acanthias"))[1,]
+spinyMat = subset(maturity(species_list = c("Squalus acanthias")), Locality=="Northwest Atlantic")
 ```
 
+Calculate growth rate for Northwest Atlantic spiny dogfish stock
 ```{r}
-agemat = rbind(Mruffe$AgeMatMin, Mruffe$AgeMatMin2)
-agemat = mean(agemat[1,] + agemat[2,], na.rm=T)
-lifespan = 
-
+lifespan = mean(spinyLife$tmax, na.rm=T)
+fecundity = (spinyFec$FecundityMin+spinyFec$FecundityMax) / 2 # mean of minimum and maximum fecundity
+agemat = (spinyMat$AgeMatMin + spinyMat$AgeMatMin2) / 2 # mean of two records for minimum age at maturity
+rmax = getRmax(method = "Smith.etal.1998", mortality = "Then.etal.2014", fec = fecundity, lifespan = lifespan, agemat = agemat)
+paste0("Intrinsic Growth Rate = ", round(rmax, 3))
 ```
 
 ## Exponential Population Growth
@@ -303,6 +343,7 @@ lines(Nt[,3]~Time, col = "blue")
 $$
 N_{t+1} = N_t + rN_t(1-N_t/K) - C_t 
 $$
+
 ```{r}
 r = 0.5 # intrinsic growth rate
 K = 1000 # carrying capacity
